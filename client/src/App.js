@@ -2,7 +2,7 @@ import {useState} from 'react'
 import ReactDOM from "react-dom/client";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Signup from './Signup.jsx'
-
+import Home from './Home.js'
 import Login from './Login.jsx';
 import React from 'react';
 
@@ -14,6 +14,8 @@ function App() {
       <Routes>
         <Route path='/register' element={<Signup/>}/>
         <Route path='/login' element={<Login/>}/>
+        <Route path="/Home" element={<Home />}/>
+        <Route path="/"element={<Login/>}/>
       </Routes>
     </Router>
   );
