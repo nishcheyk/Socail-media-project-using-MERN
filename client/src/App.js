@@ -1,12 +1,12 @@
 import {useState} from 'react'
 import ReactDOM from "react-dom/client";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import Signup from './Signup.jsx'
-import Home from './Home.js'
-import Login from './Login.jsx';
+import Signup from './Pages/Signup.jsx'
+import Home from './Pages/Home.js'
+import Login from './Pages/Login.jsx';
 import React from 'react';
 
-import { BrowserRouter as Router, Routes, Route,Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (

@@ -3,26 +3,23 @@ import { Link } from "react-router-dom";
 import axios from 'axios'
 import {useNavigate} from "react-router-dom"
 
-
 function Login(){
-
 
     const[email,setEmail]=useState()
     const[password,setPassword]=useState()
     const navigate =useNavigate()
 
-
-const handleSubmit=(e)=>{
+const handleSubmit= async(e)=>{
     e.preventDefault()
     axios.post('http://localhost:3001/login',{email,password})
     .then(result =>{
       console.log(result)
       if(result.data ==="Success"){
+        localStorage.setItem("isLoggedIn", true);
         navigate('/home')
-      }
-})
+      }})
 
-    .catch(err=> console.log(err))
+.catch(err=> console.log(err))
 }
 
    return(
