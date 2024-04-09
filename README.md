@@ -1,16 +1,18 @@
 ﻿# thapar-links-react
- features  of the project 
+Objective of project 
  1) login(use mongoose storage)
  2) registration
- 3) Create an account
- 4) Logout button
- 5) included a new feature that prevents users from bypassing the login screen and going straight to the home page.
-    
-more objectives 
-1)like 
-2 dislikes 
-3)comment 
-4) post photo
-5) post text
-6) dp change and set 
+ 3) request of following if your account is private that mean if account is private only user who are following the private account them can view the post of the acccount 
+ 4) included a new feature that prevents users from bypassing the login screen and going straight to the home page.
+ 5) forget password
+ 6) like
+ 7) dislikes
+ 8) comment,caption
+ 9) post photo
+ 10) post text
+ 11) dp change and set
+ 12) follow / followings
+
+
+
 
