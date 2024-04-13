@@ -1,9 +1,8 @@
-import {useState} from 'react'
-import ReactDOM from "react-dom/client";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Signup from './Pages/Signup.jsx'
-import Home from './Pages/Home.js'
+import Home from './Pages/HomePage.js'
 import Login from './Pages/Login.jsx';
+import ForgetPassword from'./Pages/ForgetPassword.jsx';
 import React from 'react';
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -15,6 +14,7 @@ function App() {
         <Route path='/register' element={<Signup/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path="/Home" element={<Home />}/>
+        <Route path="/ForgetPassword" element={<ForgetPassword/>}/>
         <Route path="/"element={<Login/>}/>
       </Routes>
     </Router>
