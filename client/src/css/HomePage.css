@@ -1,0 +1,172 @@
+/* Left side header */
+.left-header-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-details {
+    margin-right: 20px;
+}
+
+.follow-section {
+    display: flex;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align to the left */
+}
+
+.search-input {
+    margin-right: 10px;
+}
+
+.search-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.search-button:focus {
+    outline: none;
+}
+
+
+.left-header {
+    background-color: #194759;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.main{
+    background-color: #194759;
+}
+.left-header-content {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.user-details {
+    margin-bottom: 10px;
+}
+
+.search-bar {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.search-input {
+    /* Add your styles for the search input */
+}
+
+.search-button {
+    background-color: #194759;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+/* Profile view */
+.profile-view {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Main content section */
+.main-content {
+
+    display: flex;
+    justify-content: space-between;
+    background-color: #7EBFB3;
+    color: white;
+}
+
+/* Panels */
+.public-posts-panel,
+.user-posts-panel,
+.post-creation-panel {
+    width: 30%;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 10px;
+}
+.public-posts-panel,
+.user-posts-panel {
+    max-height: 400px; /* Adjust the maximum height as needed */
+    overflow-y: auto;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+}
+
+.public-posts-panel::-webkit-scrollbar,
+.user-posts-panel::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+/* Right side header */
+.right-header {
+    background-color: #194759;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.right-header-content {
+    display: flex;
+    align-items: center;
+}
+
+.head-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    margin-right: 20px;
+}
+
+.profile-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Logout container */
+.logout-container {
+    margin-left: 20px;
+}
+
+.logout-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}

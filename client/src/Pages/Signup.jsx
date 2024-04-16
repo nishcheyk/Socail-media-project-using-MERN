@@ -18,7 +18,7 @@ function Signup() {
         axios.post('http://localhost:3001/register/', { username, name, email, password, favColor, accountType })
             .then(result => {
                 console.log(result);
-                navigate('/home');
+                navigate('/login');
             })
             .catch(error => {
                 if (error.response && error.response.data && error.response.data.message) {

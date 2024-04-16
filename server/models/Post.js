@@ -22,6 +22,14 @@ const postSchema = new mongoose.Schema({
         type: String,
         enum: ['private', 'public'],
         default: 'private'
+    },
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    likesCount: {
+        type: Number,
+        default: 0
     }
     // You can add more fields as needed
 }, { timestamps: true });

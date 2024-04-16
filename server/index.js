@@ -1,6 +1,7 @@
 const express = require("express")
 const mongoose= require('mongoose')
 const cors = require("cors")
+
 const UserModel= require('./models/Employee')
 const PostModel = require('./models/Post');
 
@@ -131,19 +132,82 @@ app.get("/p", async (req, res) => {
     }
 });
 
-app.get("/public", async (req, res) => {
-    try {
-        // Retrieve all posts with account type 'public' from the database
-        const posts = await PostModel.find({ accountType: 'public' });
 
-        // Respond with the retrieved posts
+app.get('/public/posts', async (req, res) => {
+    try {
+        const posts = await PostModel.find({ accountType: 'public' });
         res.status(200).json(posts);
     } catch (error) {
-        // Handle errors
-        console.error("Error fetching public posts:", error);
-        res.status(500).json({ message: "Error fetching public posts" });
+        console.error('Error fetching public posts:', error);
+        res.status(500).json({ message: 'Error fetching public posts' });
     }
 });
+
+// Post like/dislike
+app.post('/posts/:postId/like', async (req, res) => {
+    const postId = req.params.postId;
+    const userId = req.body.userId;
+
+    try {
+        // Find the post by ID
+        const post = await PostModel.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        // Check if the user has already liked the post
+        const index = post.likes.indexOf(userId);
+        if (index !== -1) { // User already liked the post
+            // Remove user from likes array and decrement likes count
+            post.likes.splice(index, 1);
+            post.likesCount -= 1;
+        } else {
+            // Add user to likes array and increment likes count
+            post.likes.push(userId);
+            post.likesCount += 1;
+        }
+        // Save the updated post
+        await post.save();
+        res.status(200).json(post);
+    } catch (error) {
+        console.error('Error liking/disliking post:', error);
+        res.status(500).json({ message: 'Error liking/disliking post' });
+    }
+});
+
+//disliked
+//dislike
+app.post('/posts/:postId/dislike', async (req, res) => {
+    const postId = req.params.postId;
+    const userId = req.body.userId;
+
+    try {
+        // Find the post by ID
+        const post = await PostModel.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Check if the user has already liked the post
+        if (!post.likes.includes(userId)) {
+            return res.status(400).json({ message: 'You have not liked this post yet' });
+        }
+
+        // Remove user from likes array and decrement likes count
+        const index = post.likes.indexOf(userId);
+        post.likes.splice(index, 1);
+        post.likesCount -= 1;
+
+        // Save the updated post
+        await post.save();
+
+        res.status(200).json(post);
+    } catch (error) {
+        console.error('Error disliking post:', error);
+        res.status(500).json({ message: 'Error disliking post' });
+    }
+});
+
+
 
 
 //profile display
@@ -174,9 +238,7 @@ app.get("/search", async (req, res) => {
     try {
         const query = req.query.q; // Get the search query from the request parameters
 
-        // Perform search query based on the received query parameter
-        // This could involve querying your database or any other data source
-        // For example, you can search for users by username or any other criteria
+
         const searchResults = await UserModel.find({ username: { $regex: query, $options: 'i' } });
 
         // Return the search results as JSON response
@@ -188,83 +250,65 @@ app.get("/search", async (req, res) => {
 });
 
 
-
-// Follow a user
-app.post("/follow/:userId", async (req, res) => {
+app.post('/follow/:userId', async (req, res) => {
     const { userId } = req.params;
     const { followerId } = req.body;
 
     try {
-        // Find the user to follow
-        const userToFollow = await UserModel.findById(userId);
-        if (!userToFollow) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        // Update the follower's following list
+        await UserModel.findByIdAndUpdate(followerId, { $addToSet: { following: userId } });
 
-        // Find the follower
-        const follower = await UserModel.findById(followerId);
-        if (!follower) {
-            return res.status(404).json({ message: "Follower not found" });
-        }
+        // Update the user's followers list
+        await UserModel.findByIdAndUpdate(userId, { $addToSet: { followers: followerId } });
 
-        // Check if the follower is already following the user
-        if (follower.following.includes(userId)) {
-            return res.status(400).json({ message: "User already followed" });
-        }
-
-        // Update the follower's following list and the user's followers list
-        follower.following.push(userId);
-        userToFollow.followers.push(followerId);
-
-        // Save changes to the database
-        await Promise.all([follower.save(), userToFollow.save()]);
-
-        res.status(200).json({ message: "User followed successfully" });
+        res.status(200).json({ message: 'User followed successfully.' });
     } catch (error) {
-        console.error("Error following user:", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error('Error following user:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Unfollow a user
-app.post("/unfollow/:userId", async (req, res) => {
+// Unfollow route
+app.post('/unfollow/:userId', async (req, res) => {
     const { userId } = req.params;
     const { followerId } = req.body;
 
     try {
-        // Find the user to unfollow
-        const userToUnfollow = await UserModel.findById(userId);
-        if (!userToUnfollow) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        // Update the follower's following list
+        await UserModel.findByIdAndUpdate(followerId, { $pull: { following: userId } });
 
-        // Find the follower
-        const follower = await UserModel.findById(followerId);
-        if (!follower) {
-            return res.status(404).json({ message: "Follower not found" });
-        }
+        // Update the user's followers list
+        await UserModel.findByIdAndUpdate(userId, { $pull: { followers: followerId } });
 
-        // Check if the follower is already not following the user
-        const followingIndex = follower.following.indexOf(userId);
-        if (followingIndex === -1) {
-            return res.status(400).json({ message: "User not followed" });
-        }
-
-        // Remove the user from the follower's following list and the follower from the user's followers list
-        follower.following.splice(followingIndex, 1);
-        const followerIndex = userToUnfollow.followers.indexOf(followerId);
-        userToUnfollow.followers.splice(followerIndex, 1);
-
-        // Save changes to the database
-        await Promise.all([follower.save(), userToUnfollow.save()]);
-
-        res.status(200).json({ message: "User unfollowed successfully" });
+        res.status(200).json({ message: 'User unfollowed successfully.' });
     } catch (error) {
-        console.error("Error unfollowing user:", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error('Error unfollowing user:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
+
+
+
+//following post
+
+app.get('/users/:userId/following', async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.params.userId).populate('following', '_id name');
+        res.json(user.following);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch following users', error });
+    }
+});
+
+app.get('/users/:userId/posts', async (req, res) => {
+    try {
+        const posts = await PostModel.find({ userId: req.params.userId });
+        res.json(posts);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch user posts', error });
+    }
+});
 
 app.listen(3001,()=>{
     console.log("server is running")

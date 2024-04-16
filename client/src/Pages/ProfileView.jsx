@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+// ProfilePage.jsx
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-function ProfileView({ userId, loggedInUserId }) {
+import ProfileView from '../Componets/ProfileView';
+
+function ProfilePage({ userId, loggedInUserId }) {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
@@ -60,24 +64,20 @@ function ProfileView({ userId, loggedInUserId }) {
     return (
         <div>
             <h2>Profile View</h2>
-            <div>
-                <p>Name: {userData.name}</p>
-                <p>Email: {userData.email}</p>
-                <p>Followers: {userData.followers.length}</p>
-                <p>Following: {userData.following.length}</p>
-                {/* Render follow/unfollow button */}
-                {loggedInUserId !== userId && (
-                    <div>
-                        {isFollowing ? (
-                            <button onClick={handleUnfollow}>Unfollow</button>
-                        ) : (
-                            <button onClick={handleFollow}>Follow</button>
-                        )}
-                    </div>
-                )}
-            </div>
+            <ProfileView userData={userData} loggedInUserId={loggedInUserId} />
+            {/* Render follow/unfollow button */}
+            {loggedInUserId !== userId && (
+                <div>
+                    {isFollowing ? (
+                        <button onClick={handleUnfollow}>Unfollow</button>
+                    ) : (
+                        <button onClick={handleFollow}>Follow</button>
+                    )}
+                </div>
+            )}
+            <Link to="/">Go back to Home</Link>
         </div>
     );
 }
 
-export default ProfileView;
+export default ProfilePage;

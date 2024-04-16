@@ -1,0 +1,42 @@
+.profile-view {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-view h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.profile-view p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.btn-follow,
+.btn-unfollow {
+    background-color: #6c63ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+.btn-unfollow {
+    background-color: #f44336;
+}
+
+.btn-follow:hover,
+.btn-unfollow:hover {
+    background-color: #554fb8;
+}

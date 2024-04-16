@@ -4,52 +4,50 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import '../css/PublicPostsComponent.css';
 
-function PublicPostsComponent() {
-    const [userPosts, setUserPosts] = useState([]);
+function FollowingPostsComponent() {
+    const [followingPosts, setFollowingPosts] = useState([]);
     const userData = JSON.parse(localStorage.getItem('userData'));
 
     useEffect(() => {
-        const fetchUserPosts = async () => {
+        const fetchFollowingPosts = async () => {
             try {
-                const response = await axios.get('http://localhost:3001/public/posts');
-                setUserPosts(response.data);
+                // Fetch the users that the current user is following
+                const followingResponse = await axios.get(`http://localhost:3001/users/${userData._id}/following`);
+                const followingUsers = followingResponse.data;
+
+                // Fetch posts from the users that the current user is following
+                const postsPromises = followingUsers.map(async (user) => {
+                    const userPostsResponse = await axios.get(`http://localhost:3001/users/${user._id}/posts`);
+                    return userPostsResponse.data;
+                });
+
+                const postsArrays = await Promise.all(postsPromises);
+                const mergedPosts = [].concat(...postsArrays);
+                setFollowingPosts(mergedPosts);
             } catch (error) {
-                console.error('Error fetching user posts:', error);
+                console.error('Error fetching following posts:', error);
             }
         };
 
-        fetchUserPosts();
-    }, []);
+        fetchFollowingPosts();
+    }, [userData._id]);
 
     const handleLike = async (postId) => {
         try {
-            const postIndex = userPosts.findIndex(post => post._id === postId);
-            const updatedPosts = [...userPosts];
-
-            // Check if the user has already liked the post
-            if (updatedPosts[postIndex].likes.includes(userData._id)) {
-                await axios.post(`http://localhost:3001/posts/${postId}/dislike`, { userId: userData._id });
-                updatedPosts[postIndex].likesCount -= 1;
-                updatedPosts[postIndex].likes = updatedPosts[postIndex].likes.filter(userId => userId !== userData._id);
-            } else {
-                await axios.post(`http://localhost:3001/posts/${postId}/like`, { userId: userData._id });
-                updatedPosts[postIndex].likesCount += 1;
-                updatedPosts[postIndex].likes.push(userData._id);
-            }
-
-            // Update the state after modifying the post
-            setUserPosts(updatedPosts);
+            // Like or dislike functionality
+            // Similar to the handleLike function in PublicPostsComponent
         } catch (error) {
             console.error('Error liking/disliking post:', error);
         }
     };
 
     return (
-        <div className="public-posts">
-            <h2>Public Posts</h2>
-            {userPosts.map(post => (
+        <div className="following-posts">
+            <h2>Following Posts</h2>
+            {followingPosts.map(post => (
                 <div key={post._id} className="post">
                     <div className="post-header">
+
                         <p className="post-username">Posted by: {post.userName}</p>
                         <p className="post-likes">Likes: {post.likesCount}</p>
                     </div>
@@ -68,4 +66,4 @@ function PublicPostsComponent() {
     );
 }
 
-export default PublicPostsComponent;
+export default FollowingPostsComponent;

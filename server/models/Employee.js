@@ -26,7 +26,20 @@ const UserSchema = new mongoose.Schema({
     bio: String,
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    
+
+    followerNo: {
+        type: Number,
+        default: 0
+        // Number of people who have followed the user
+    },
+    followingNo: {
+        type: Number,
+        default: 0 // Number of people who the user is following
+    },
+    likedPosts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post'
+    }]
 });
 
 const UserModel = mongoose.model("User", UserSchema);

@@ -1,0 +1,54 @@
+/* PublicPostsComponent.css */
+
+.post {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.post-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.post-username {
+    font-style: italic;
+    color: #777;
+}
+
+.post-likes {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.post-content {
+    margin-bottom: 16px;
+    color: #555;
+}
+
+.post-icons {
+    display: flex;
+    align-items: center;
+}
+
+.icon {
+    cursor: pointer;
+    margin-left: 8px;
+    color: #888;
+    transition: color 0.3s ease;
+}
+
+.icon:hover {
+    color: #333;
+}

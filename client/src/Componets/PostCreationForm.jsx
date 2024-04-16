@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import '../css/PostCreationForm.css'; // Import custom CSS for styling
 
 function PostCreationForm() {
     const [title, setTitle] = useState('');
@@ -38,29 +39,31 @@ function PostCreationForm() {
     };
 
     return (
-        <div className="post-creation-form">
-            <h2>Create a New Post</h2>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                    <label htmlFor="title">Title:</label>
+        <div className="post-creation-form-container">
+            <h2 className="post-creation-form-heading">Create a New Post</h2>
+            <form onSubmit={handleSubmit} className="post-creation-form">
+                <div className="form-group">
+                    <label htmlFor="title" className="form-label">Title:</label>
                     <input
                         type="text"
                         id="title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
+                        className="form-control"
                         required
                     />
                 </div>
-                <div className="mb-3">
-                    <label htmlFor="content">Content:</label>
+                <div className="form-group">
+                    <label htmlFor="content" className="form-label">Content:</label>
                     <textarea
                         id="content"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
+                        className="form-control"
                         required
                     ></textarea>
                 </div>
-                <button type="submit" className="btn btn-primary">Submit</button>
+                <button type="submit" className="btn btn-primary btn-submit">Submit</button>
             </form>
         </div>
     );
