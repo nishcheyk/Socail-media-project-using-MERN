@@ -1,10 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
-function ProfileView({ userId, loggedInUserId }) {
+function ProfileView({ userId }) {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
+    const [loggedInUser, setLoggedInUser] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Get logged-in user data from localStorage
+        const userData = JSON.parse(localStorage.getItem('userData'));
+
+        if (userData && userData._id) {
+            setLoggedInUser(userData);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -12,7 +26,7 @@ function ProfileView({ userId, loggedInUserId }) {
                 const profileResponse = await axios.get(`http://localhost:3001/profile/${userId}`);
                 const userProfile = profileResponse.data;
                 setUserData(userProfile);
-                setIsFollowing(userProfile.followers.includes(loggedInUserId));
+                setIsFollowing(userProfile.followers.includes(loggedInUser?._id));
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching user profile:', error);
@@ -21,22 +35,26 @@ function ProfileView({ userId, loggedInUserId }) {
         };
 
         fetchUserProfile();
-    }, [userId]);
+    }, [userId, loggedInUser]);
 
     const handleFollow = async () => {
         try {
             if (userData.accountType === 'private') {
-                // If account type is private, send follow request
-                await axios.post(`http://localhost:3001/follow-request/${userId}`, { followerId: loggedInUserId ,username:lo});
+                await axios.post(`http://localhost:3001/follow-request/${userId}`, {
+                    followerId: loggedInUser._id,
+                    username: loggedInUser.username
+                });
+                setIsFollowing(true);
             } else {
-                // If account type is not private, directly follow
-                await axios.post(`http://localhost:3001/follow/${userId}`, { followerId: loggedInUserId });
+                await axios.post(`http://localhost:3001/follow/${userId}`, { loggedInUserId: loggedInUser._id });
+
                 setUserData(prevUserData => ({
                     ...prevUserData,
-                    followers: [...prevUserData.followers, loggedInUserId]
+                    followers: [...prevUserData.followers, loggedInUser._id]
                 }));
+
             }
-            setIsFollowing(true); // Update UI
+
         } catch (error) {
             console.error('Error following user:', error);
         }
@@ -44,21 +62,22 @@ function ProfileView({ userId, loggedInUserId }) {
 
     const handleUnfollow = async () => {
         try {
-            await axios.post(`http://localhost:3001/unfollow/${userId}`, { followerId: loggedInUserId })
-            .then(response => {
-                console.log(response.data); // Handle the response
-            })
-            .catch(error => {
-                console.error('Error unfollowing user:', error); // Handle errors
-            });
+            await axios.post(`http://localhost:3001/unfollow/${userId}`, { loggedInUserId: loggedInUser._id });
             setIsFollowing(false);
             setUserData(prevUserData => ({
                 ...prevUserData,
-                followers: prevUserData.followers.filter(id => id !== loggedInUserId)
+                followers: prevUserData.followers.filter(id => id !== loggedInUser._id)
             }));
         } catch (error) {
             console.error('Error unfollowing user:', error);
         }
+    };
+
+    const handleCloseProfile = () => {
+        navigate('/home', { replace: true });
+
+            // Trigger a refresh of the public posts data
+            window.location.reload();
     };
 
     if (loading) {
@@ -71,15 +90,20 @@ function ProfileView({ userId, loggedInUserId }) {
 
     return (
         <div>
-            <h2>Profile Viw</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2>Profile View</h2>
+                <IconButton onClick={handleCloseProfile}>
+                    <CloseIcon /> {/* Close icon */}
+                </IconButton>
+            </div>
             <div>
                 <p>Name: {userData.name}</p>
                 <p>Email: {userData.email}</p>
                 <p>Followers: {userData.followers.length}</p>
-            <p>Following: {userData.following.length}</p>
-            <p> abcd: { userData.accountType}</p>
-                {/* Render follow/unfollow button */}
-                {loggedInUserId !== userId && (
+                <p>Following: {userData.following.length}</p>
+                <p>{loggedInUser._id}</p>
+                <p>abcd{userData.accountType}</p>
+                {loggedInUser._id !== userId && (
                     <div>
                         {isFollowing ? (
                             <button onClick={handleUnfollow}>Unfollow</button>

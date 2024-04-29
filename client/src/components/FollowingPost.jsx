@@ -11,11 +11,9 @@ function FollowingPostsComponent() {
     useEffect(() => {
         const fetchFollowingPosts = async () => {
             try {
-                // Fetch the users that the current user is following
                 const followingResponse = await axios.get(`http://localhost:3001/users/${userData._id}/following`);
                 const followingUsers = followingResponse.data;
 
-                // Fetch posts from the users that the current user is following
                 const postsPromises = followingUsers.map(async (user) => {
                     const userPostsResponse = await axios.get(`http://localhost:3001/users/${user._id}/posts`);
                     return userPostsResponse.data;
@@ -34,8 +32,31 @@ function FollowingPostsComponent() {
 
     const handleLike = async (postId) => {
         try {
-            // Like or dislike functionality
-            // Similar to the handleLike function in PublicPostsComponent
+            const updatedPosts = followingPosts.map(post => {
+                if (post._id === postId) {
+                    if (post.likes.includes(userData._id)) {
+                        // User has already liked the post, perform dislike
+                        axios.post(`http://localhost:3001/posts/${postId}/dislike`, { userId: userData._id });
+                        return {
+                            ...post,
+                            likesCount: post.likesCount - 1,
+                            likes: post.likes.filter(userId => userId !== userData._id)
+                        };
+                    } else {
+                        // User hasn't liked the post, perform like
+                        axios.post(`http://localhost:3001/posts/${postId}/like`, { userId: userData._id });
+                        return {
+                            ...post,
+                            likesCount: post.likesCount + 1,
+                            likes: [...post.likes, userData._id]
+                        };
+                    }
+                }
+                return post;
+            });
+
+            // Update the state with the modified posts array
+            setFollowingPosts(updatedPosts);
         } catch (error) {
             console.error('Error liking/disliking post:', error);
         }
@@ -47,7 +68,6 @@ function FollowingPostsComponent() {
             {followingPosts.map(post => (
                 <div key={post._id} className="post">
                     <div className="post-header">
-
                         <p className="post-username">Posted by: {post.userName}</p>
                         <p className="post-likes">Likes: {post.likesCount}</p>
                     </div>

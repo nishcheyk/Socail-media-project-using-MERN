@@ -9,7 +9,9 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-mongoose.connect("mongodb://localhost/Register");
+
+
+mongoose.connect("mongodb://localhost:27017/thapar-link");
 
 app.post("/Login", (req, res) => {
     const { email, password } = req.body;
@@ -30,36 +32,44 @@ app.post("/Login", (req, res) => {
             res.status(500).json({ success: false, message: "Internal server error" }); // Change marked here
         });
 });
-
-
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
     const { username, email } = req.body;
 
-    // Check if the username is already taken
-    UserModel.findOne({ username: username })
-        .then(existingUsername => {
-            if (existingUsername) {
-                return res.status(400).json({ message: "Username is already taken. Please choose a different username." });
-            }
+    try {
+        // Check if the username is already taken
+        const existingUsername = await UserModel.findOne({ username: username });
+        if (existingUsername) {
+            return res.status(400).json({ message: "Username is already taken. Please choose a different username." });
+        }
 
-            // Check if the email is already taken
-            UserModel.findOne({ email: email })
-                .then(existingEmail => {
-                    if (existingEmail) {
-                        return res.status(400).json({ message: "Email is already registered. Please use a different email address." });
-                    }
+        // Check if the email is already taken
+        const existingEmail = await UserModel.findOne({ email: email });
+        if (existingEmail) {
+            return res.status(400).json({ message: "Email is already registered. Please use a different email address." });
+        }
 
+        // Create the new user
+        const newUser = await UserModel.create(req.body);
 
-                    UserModel.create(req.body)
-                        .then(newUser => res.json(newUser))
-                        .catch(err => res.status(500).json({ message: "Error occurred while creating the user.", error: err }));
-                })
-                .catch(err => res.status(500).json({ message: "Error occurred while checking email availability.", error: err }));
-        })
-        .catch(err => res.status(500).json({ message: "Error occurred while checking username availability.", error: err }));
+        // Automatically follow the new user (self-follow)
+        newUser.followers.push(newUser._id);
+        newUser.followerNo += 1;
+        await newUser.save();
+
+        // Update the logged-in user's following list
+        const loggedInUser = await UserModel.findById(newUser._id);
+        if (loggedInUser) {
+            loggedInUser.following.push(newUser._id);
+            loggedInUser.followingNo += 1;
+            await loggedInUser.save();
+        }
+
+        res.json({ message: "User created successfully.", newUser });
+    } catch (error) {
+        console.error("Error occurred while registering user:", error);
+        res.status(500).json({ message: "Error occurred while registering user.", error: error });
+    }
 });
-
-
 app.post("/ForgetPassword", (req, res) => {
     const { email, favColor, password } = req.body;
     UserModel.findOne({ email: email })
@@ -132,7 +142,6 @@ app.get("/p", async (req, res) => {
     }
 });
 
-
 app.get('/public/posts', async (req, res) => {
     try {
         const posts = await PostModel.find({ accountType: 'public' });
@@ -142,7 +151,6 @@ app.get('/public/posts', async (req, res) => {
         res.status(500).json({ message: 'Error fetching public posts' });
     }
 });
-
 // Post like/dislike
 app.post('/posts/:postId/like', async (req, res) => {
     const postId = req.params.postId;
@@ -173,8 +181,6 @@ app.post('/posts/:postId/like', async (req, res) => {
         res.status(500).json({ message: 'Error liking/disliking post' });
     }
 });
-
-//disliked
 //dislike
 app.post('/posts/:postId/dislike', async (req, res) => {
     const postId = req.params.postId;
@@ -207,9 +213,6 @@ app.post('/posts/:postId/dislike', async (req, res) => {
     }
 });
 
-
-
-
 //profile display
 app.get("/profile/:userId", async (req, res) => {
     try {
@@ -230,10 +233,7 @@ app.get("/profile/:userId", async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
-
 //search
-// In your backend index.js or routes file
-
 app.get("/search", async (req, res) => {
     try {
         const query = req.query.q; // Get the search query from the request parameters
@@ -249,42 +249,213 @@ app.get("/search", async (req, res) => {
     }
 });
 
-
-app.post('/follow/:userId', async (req, res) => {
+//fOLLOW  REQUEST
+app.post('/follow-request/:userId', async (req, res) => {
     const { userId } = req.params;
-    const { followerId } = req.body;
+    const { followerId, username } = req.body;
 
     try {
-        // Update the follower's following list
-        await UserModel.findByIdAndUpdate(followerId, { $addToSet: { following: userId } });
+        console.log('Received followerId:', followerId);
 
-        // Update the user's followers list
-        await UserModel.findByIdAndUpdate(userId, { $addToSet: { followers: followerId } });
+        // Check if userId is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: 'Invalid user ID.' });
+        }
 
-        res.status(200).json({ message: 'User followed successfully.' });
+        // If not exists, add the follow request
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $addToSet: {
+                    followRequests: {
+                        userId: followerId, // Save followerId as ObjectId
+                        username
+                    }
+                }
+            },
+            { new: true } // To return the updated document
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        res.status(200).json({ message: 'Follow request sent successfully.' });
     } catch (error) {
-        console.error('Error following user:', error);
+        console.error('Error sending follow request:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-// Unfollow route
-app.post('/unfollow/:userId', async (req, res) => {
-    const { userId } = req.params;
-    const { followerId } = req.body;
+//find follow request
+app.get('/follow-requests/:userId', async (req, res) => {
+    const userId = req.params.userId;
 
     try {
-        // Update the follower's following list
-        await UserModel.findByIdAndUpdate(followerId, { $pull: { following: userId } });
+        const user = await UserModel.findById(userId).populate('followRequests.userId', 'username');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-        // Update the user's followers list
-        await UserModel.findByIdAndUpdate(userId, { $pull: { followers: followerId } });
-
-        res.status(200).json({ message: 'User unfollowed successfully.' });
+        const followRequests = user.followRequests;
+        res.status(200).json(followRequests);
     } catch (error) {
-        console.error('Error unfollowing user:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error fetching follow requests:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
+});
+
+// POST endpoint to cancel a follow request
+app.post('/cancel-follow-request/:requestId', async (req, res) => {
+    const requestId = req.params.requestId;
+
+    try {
+        // Find the logged-in user and remove the follow request
+        const user = await UserModel.findOneAndUpdate(
+            { 'followRequests._id': requestId },
+            { $pull: { followRequests: { _id: requestId } } },
+            { new: true }
+        );
+
+        res.status(200).json({ message: 'Follow request canceled successfully' });
+    } catch (error) {
+        console.error('Error canceling follow request:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+//accept a follow request
+app.post('/accept-follow-request/:requestId', async (req, res) => {
+    const requestId = req.params.requestId;
+
+    try {
+        // Retrieve the logged-in user's ID from the request body
+        const loggedInUserId = req.body.loggedInUserId; // Assuming this is provided in the request body
+
+        // Find the logged-in user in the database
+        const loggedInUser = await UserModel.findById(loggedInUserId);
+        console.log("loggedInUserId:", loggedInUserId);
+        if (!loggedInUser) {
+            return res.status(405).json({ message: 'Logged-in user not found.' });
+        }
+
+        // Find the follow request in the logged-in user's followRequests array
+        const followRequestIndex = loggedInUser.followRequests.findIndex(request => request._id == requestId);
+        if (followRequestIndex === -1) {
+            return res.status(404).json({ message: 'Follow request not found.' });
+        }
+
+        // Get the user ID of the requester from the follow request
+        const requesterUserId = loggedInUser.followRequests[followRequestIndex].userId;
+
+        // Add the requester to the logged-in user's followers list
+        loggedInUser.followers.push(requesterUserId);
+        loggedInUser.followerNo += 1;
+
+        // Remove the follow request from the logged-in user's followRequests array
+        loggedInUser.followRequests.splice(followRequestIndex, 1);
+
+        // Save the updated logged-in user in the database
+        await loggedInUser.save();
+
+        // Find the user who sent the follow request (requester) and add the logged-in user to their following list
+        const requesterUser = await UserModel.findById(requesterUserId);
+        if (!requesterUser) {
+            return res.status(406).json({ message: 'Requester user not found.' });
+        }
+
+        // Add the logged-in user to the requester's following list
+        requesterUser.following.push(loggedInUserId);
+        requesterUser.followingNo += 1;
+
+        // Save the updated requester user in the database
+        await requesterUser.save();
+
+        // Respond with a success message
+        res.json({ message: 'Follow request accepted successfully.' });
+    } catch (error) {
+        console.error('Error accepting follow request:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+
+
+
+//following a user
+app.post("/follow/:userId", (req, res) => {
+    const userId = req.params.userId;
+    const loggedInUserId = req.body.loggedInUserId;
+    console.log("loggedInUserId:", loggedInUserId);
+
+    // Check whether the logged in user is
+    // Check if the user exists
+    UserModel.findById(userId)
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ message: "User not found." });
+            }
+
+            // Check if the logged-in user is already following the user
+            if (user.followers.includes(loggedInUserId)) {
+                return res.status(400).json({ message: "You are already following this user." });
+            }
+
+            // Add the logged-in user to the user's followers list
+            user.followers.push(loggedInUserId);
+            user.followerNo += 1;
+            user.save();
+
+            // Add the user to the logged-in user's following list
+            UserModel.findById(loggedInUserId)
+                .then(loggedInUser => {
+                    loggedInUser.following.push(userId);
+                    loggedInUser.followingNo += 1;
+                    loggedInUser.save();
+                    res.json({ message: "You are now following the user." });
+                })
+                .catch(err => res.status(500).json({ message: "Error occurred while updating following list.", error: err }));
+        })
+        .catch(err => res.status(500).json({ message: "Error occurred while following the user.", error: err }));
+});
+
+// Route for unfollowing a user
+app.post("/unfollow/:userId", (req, res) => {
+    const userId = req.params.userId;
+    const loggedInUserId = req.body.loggedInUserId; // Assuming you pass the logged-in user's ID in the request body
+    // Check if the user exists
+    console.log("loggedInUserId:", loggedInUserId);
+    console.log("nUserId:", userId);
+
+    UserModel.findById(userId)
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ message: "User not found." });
+            }
+
+            // Check if the logged-in user is already following the user
+            if (!user.followers.includes(loggedInUserId)) {
+                return res.status(400).json({ message: "You are not following this user." });
+            }
+
+            // Remove the logged-in user from the user's followers list
+            user.followers.pop(loggedInUserId);
+            user.followerNo -= 1;
+            user.save();
+
+            // Remove the user from the logged-in user's following list
+
+
+            UserModel.findById(loggedInUserId)
+            .then(loggedInUser => {
+                loggedInUser.following.pop(userId);
+                loggedInUser.followingNo -= 1;
+                loggedInUser.save();
+                res.json({ message: "You are now following the user." });
+            })
+            .catch(err => res.status(500).json({ message: "Error occurred while updating following list.", error: err }));
+    })
+
+        .catch(err => res.status(500).json({ message: "Error occurred while unfollowing the user.", error: err }));
 });
 
 

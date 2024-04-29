@@ -65,7 +65,9 @@
 .search-input {
     /* Add your styles for the search input */
 }
-
+.dropdown-button{
+    color: #194759;
+}
 .search-button {
     background-color: #194759;
     color: #ffffff;

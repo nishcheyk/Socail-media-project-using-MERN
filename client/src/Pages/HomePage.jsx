@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios
 
@@ -6,10 +6,11 @@ import FiSearch from '@mui/icons-material/Search';
 import FiLogOut from '@mui/icons-material/Logout';
 import FiAccountCircle from '@mui/icons-material/AccountCircle'; // Import the head icon
 
-import PostCreationForm from '../Componets/PostCreationForm';
-import FollowingPost from '../Componets/FollowingPost';
-import PublicPost from '../Componets/PublicPostsComponet';
-import ProfileView from '../Componets/ProfileView'; // Import the ProfileView component
+import PostCreationForm from '../components/PostCreationForm';
+import FollowingPost from '../components/FollowingPost';
+import PublicPost from '../components/PublicPostsComponet';
+import ProfileView from '../components/ProfileView'; // Import the ProfileView component
+import FollowRequests from '../components/FollowRequests'; // Import the FollowRequests component
 
 import '../css/HomePage.css'; // Import the CSS file
 
@@ -25,19 +26,12 @@ function HomePage() {
     const [showProfileOptions, setShowProfileOptions] = useState(false); // State to toggle visibility of profile options
 
     useEffect(() => {
-        // Refresh data when the refresh state changes
-        // You can add more dependencies if needed
-        if (refresh) {
-            // Refresh data for PostsDisplay component
-            // For example, you can fetch user's posts again here
-            console.log('Refreshing data...');
-        }
-    }, [refresh]);
-
-    useEffect(() => {
         // Get logged-in user data from localStorage
         const userData = JSON.parse(localStorage.getItem('userData'));
-        setLoggedInUser(userData);
+
+        if (userData && userData._id) {
+            setLoggedInUser(userData);
+        }
     }, []);
 
     const handleLogout = () => {
@@ -59,9 +53,6 @@ function HomePage() {
             const response = await axios.get(`http://localhost:3001/search?q=${searchQuery}`);
             setSearchResults(response.data);
 
-            // Fetch recommendations
-            const recommendationsResponse = await axios.get(`http://localhost:3001/recommendations?q=${searchQuery}`);
-            setRecommendations(recommendationsResponse.data);
         } catch (error) {
             console.error('Error searching users:', error);
         }
@@ -90,19 +81,11 @@ function HomePage() {
                         <div className="user-details">
                             <p><strong>Name:</strong> {loggedInUser.name}</p>
                             <p><strong>Username:</strong> {loggedInUser.username}</p>
-                         
+                            <p><strong>Username:</strong> {loggedInUser._id}</p>
                             {/* Add more details if needed */}
                         </div>
                     )}
-                    {loggedInUser && (
-                        <div className="user-details">
-
-                            <p><strong>Followers:</strong> {loggedInUser.followers.length}</p>
-                            <p><strong>Following:</strong> {loggedInUser.following.length}</p>
-                            {/* Add more details if needed */}
-                        </div>
-                    )}
-                    <div className="search-bar">
+                    <div className="searcar">
                         <input
                             type="text"
                             className="search-input"
@@ -114,12 +97,15 @@ function HomePage() {
                         {/* Display search results */}
                         {searchResults.map(user => (
                             <div key={user._id} onClick={() => handleSelectUser(user)}>
-                                <p>{user.username}</p>
+                                <p>  {user.username}  </p>
                             </div>
                         ))}
                         {/* Display selected user's profile */}
-                        {selectedUser && <ProfileView userId={selectedUser._id} loggedInUserId={loggedInUser._id} />}
+                        {selectedUser && <ProfileView userId={selectedUser._id} />}
                     </div>
+                    {/* Display follow requests */}
+
+                    {loggedInUser && <FollowRequests loggedInUserId={loggedInUser._id} />}
                 </div>
             </header>
 
@@ -144,19 +130,7 @@ function HomePage() {
                     {/* Component for creating new posts */}
                     <PostCreationForm onPostCreation={handlePostCreation} />
                     {/* Display search recommendations */}
-                    {recommendations.map((recommendation, index) => (
-                        <div key={index}>
-                            <p>{recommendation}</p>
-                        </div>
-                    ))}
-                    {/* Display search results */}
-                    {searchResults.map(user => (
-                        <div key={user._id} onClick={() => handleSelectUser(user)}>
-                            <p>{user.username}</p>
-                        </div>
-                    ))}
-                    {/* Display selected user's profile */}
-                    {selectedUser && <ProfileView userId={selectedUser._id} />}
+
                 </div>
             </div>
 
